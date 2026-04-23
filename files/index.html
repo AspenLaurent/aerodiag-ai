@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AeroDiag AI — Engine Diagnostic Suite</title>
+  <link rel="stylesheet" href="src/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="12" stroke="#00c8ff" stroke-width="1" opacity=".3"/>
+          <circle cx="14" cy="14" r="6" stroke="#00c8ff" stroke-width="1" opacity=".6"/>
+          <circle cx="14" cy="14" r="2.5" fill="#00c8ff"/>
+          <line x1="2" y1="14" x2="9" y2="14" stroke="#00c8ff" stroke-width="1" opacity=".5"/>
+          <line x1="19" y1="14" x2="26" y2="14" stroke="#00c8ff" stroke-width="1" opacity=".5"/>
+          <line x1="14" y1="2" x2="14" y2="9" stroke="#00c8ff" stroke-width="1" opacity=".5"/>
+          <line x1="14" y1="19" x2="14" y2="26" stroke="#00c8ff" stroke-width="1" opacity=".5"/>
+        </svg>
+        <span class="logo-txt">AERO<span class="logo-accent">DIAG</span> AI</span>
+      </div>
+      <nav class="topnav">
+        <button class="tnav active" onclick="nav('dashboard')">DASHBOARD</button>
+        <button class="tnav" onclick="nav('cv')">CV ANALYSIS</button>
+        <button class="tnav" onclick="nav('fdr')">FDR SYNC</button>
+        <button class="tnav" onclick="nav('pilot')">PILOT FEEDBACK</button>
+        <button class="tnav" onclick="nav('report')">MX REPORT</button>
+      </nav>
+      <div class="statusrow">
+        <div class="sdot"></div>
+        <span class="slabel">LIVE</span>
+        <span class="slabel sep">|</span>
+        <span class="slabel" id="clk">--:-- UTC</span>
+      </div>
+    </div>
+
+    <div class="body">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sb-sec">
+          <div class="sb-title">ENGINE UNITS</div>
+          <button class="eng-btn sel" onclick="selEng(this, 0)">
+            <div class="en">ENG-1 LEFT</div>
+            <div class="em">CFM56-7B · SN 741002</div>
+            <span class="badge b-er">ANOMALY</span>
+          </button>
+          <button class="eng-btn" onclick="selEng(this, 1)">
+            <div class="en">ENG-2 RIGHT</div>
+            <div class="em">CFM56-7B · SN 741003</div>
+            <span class="badge b-ok">NOMINAL</span>
+          </button>
+          <button class="eng-btn" onclick="selEng(this, 2)">
+            <div class="en">APU UNIT</div>
+            <div class="em">APS3200 · SN 210441</div>
+            <span class="badge b-wn">REVIEW</span>
+          </button>
+        </div>
+
+        <div class="sb-sec">
+          <div class="sb-title">DATA SOURCES</div>
+          <div class="src-grid">
+            <div class="src-card"><div class="sn">CV SENSOR</div><div class="ss live">● ACTIVE</div></div>
+            <div class="src-card"><div class="sn">FDR DATA</div><div class="ss live">● SYNCED</div></div>
+            <div class="src-card"><div class="sn">TEST FLIGHT</div><div class="ss live">● LOADED</div></div>
+            <div class="src-card"><div class="sn">PILOT FEED</div><div class="ss pend">◐ 2 NEW</div></div>
+          </div>
+        </div>
+
+        <div class="sb-sec sb-timeline">
+          <div class="sb-title">TIMELINE</div>
+          <div class="tl-outer" id="timeline"></div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="content">
+
+        <!-- DASHBOARD PANEL -->
+        <section id="p-dashboard" class="panel show">
+          <div class="card eng-card">
+            <div class="scanline"></div>
+            <div class="card-head">
+              <span class="card-title">ENG-1 · REAL-TIME CROSS-SECTION</span>
+              <span class="card-badge b-er" id="eng-badge">COMBUSTOR ANOMALY</span>
+            </div>
+            <div class="card-body">
+              <div class="eng-viz" id="eng-viz">
+                <div class="ev ev-fan"><div class="ev-label">FAN</div><div class="ev-val" id="v-fan">18°C</div></div>
+                <div class="ev ev-comp"><div class="ev-label">COMP</div><div class="ev-val" id="v-comp">312°C</div></div>
+                <div class="ev ev-comb hot" id="ev-comb">
+                  <div class="wdot" id="wdot"></div>
+                  <div class="ev-label">COMB</div>
+                  <div class="ev-val" id="v-comb">1740°C</div>
+                </div>
+                <div class="ev ev-turb"><div class="ev-label">TURB</div><div class="ev-val" id="v-turb">890°C</div></div>
+                <div class="ev ev-exh"><div class="ev-label">EXHT</div><div class="ev-val" id="v-exh">620°C</div></div>
+              </div>
+              <div class="metrics">
+                <div class="mc"><div class="ml">EGT</div><div class="mv wn" id="m-egt">847<span class="mu">°C</span></div><div class="mt">↑ +23 above base</div></div>
+                <div class="mc"><div class="ml">N1 RPM</div><div class="mv ok" id="m-n1">98.2<span class="mu">%</span></div><div class="mt">within limits</div></div>
+                <div class="mc"><div class="ml">FUEL FLOW</div><div class="mv er" id="m-ff">2441<span class="mu">kg/h</span></div><div class="mt">↑ anomalous</div></div>
+                <div class="mc"><div class="ml">OIL PRESS</div><div class="mv ok" id="m-op">62<span class="mu">psi</span></div><div class="mt">nominal range</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card chat-card">
+            <div class="card-head"><span class="card-title">AERODIAG AI ASSISTANT</span></div>
+            <div class="msgs" id="msgs">
+              <div class="msg ai">
+                <div class="msg-who">AERODIAG AI</div>
+                <div class="bubble alert">CV analysis of ENG-1 combustor flags irregular thermal bloom at stage 3 liner. Cross-referenced with FDR and test flight TF-2244. Confidence: 87%.</div>
+              </div>
+              <div class="msg ai">
+                <div class="msg-who">AERODIAG AI</div>
+                <div class="bubble">Pilot reports from last 2 flights note "slight vibration at cruise thrust." Pattern correlates with fuel flow deviation. Recommend borescope inspection before next departure.</div>
+              </div>
+            </div>
+            <div class="chat-in">
+              <input class="ci" id="ci" placeholder="Ask about engine status, request diagnosis, sync data..." />
+              <button class="sbtn" onclick="sendMsg()">SEND</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- CV ANALYSIS PANEL -->
+        <section id="p-cv" class="panel">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">COMPUTER VISION ANALYSIS</span>
+              <span class="card-badge b-wn">UPLOAD OR USE LIVE FEED</span>
+            </div>
+            <div class="card-body">
+              <div class="cv-dropzone" id="cv-dz"
+                ondragover="dzDrag(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)" onclick="dzClick()">
+                <div id="dz-default">
+                  <div class="dz-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <rect x="2" y="2" width="16" height="16" rx="2" stroke="#3a5570" stroke-width="1.5"/>
+                      <path d="M5 14L8 10L11 12L14 8" stroke="#00c8ff" stroke-width="1.5" stroke-linecap="round"/>
+                      <circle cx="7" cy="7" r="1.5" fill="#00c8ff" opacity=".6"/>
+                    </svg>
+                  </div>
+                  <div class="dz-title">Drop engine image or borescope feed</div>
+                  <div class="dz-sub">JPG · PNG · TIFF · MP4 frame — or click to browse</div>
+                </div>
+                <div id="dz-processing" class="hidden">
+                  <div class="dz-title accent">Processing image through CV pipeline...</div>
+                  <div class="dz-sub">Thermal bloom detection · Crack mapping · Anomaly classification</div>
+                  <div class="spin-row"><div class="spin"></div><span class="spin-label">ANALYZING</span></div>
+                </div>
+                <div id="dz-done" class="hidden">
+                  <div class="cv-img-preview">
+                    <canvas id="cv-canvas" width="600" height="140"></canvas>
+                    <div class="scan-anim" id="cv-scan-anim"></div>
+                    <div id="anno-container"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="cv-results-area" class="hidden">
+                <div class="cv-results">
+                  <div class="cv-region">
+                    <div class="cv-rname">STAGE 3 COMBUSTOR LINER</div>
+                    <div class="cv-finding er">Thermal bloom detected — 340cm² affected</div>
+                    <div class="cv-finding wn">Surface oxidation above threshold</div>
+                    <div class="cv-finding wn">Hotspot temp delta: +94°C vs baseline</div>
+                    <div class="conf-bar"><div class="conf-fill high" style="width:87%"></div></div>
+                    <div class="conf-label">CONFIDENCE 87%</div>
+                  </div>
+                  <div class="cv-region">
+                    <div class="cv-rname">HPT BLADE ROW 1</div>
+                    <div class="cv-finding wn">Minor tip erosion on 3 blades</div>
+                    <div class="cv-finding ok">No cracking detected</div>
+                    <div class="cv-finding ok">Coating integrity nominal</div>
+                    <div class="conf-bar"><div class="conf-fill med" style="width:74%"></div></div>
+                    <div class="conf-label">CONFIDENCE 74%</div>
+                  </div>
+                  <div class="cv-region">
+                    <div class="cv-rname">FUEL NOZZLES 7–9</div>
+                    <div class="cv-finding er">Flow distribution asymmetry</div>
+                    <div class="cv-finding wn">Coking residue on nozzle 8</div>
+                    <div class="cv-finding ok">Nozzle 7 and 9 within spec</div>
+                    <div class="conf-bar"><div class="conf-fill high" style="width:91%"></div></div>
+                    <div class="conf-label">CONFIDENCE 91%</div>
+                  </div>
+                  <div class="cv-region">
+                    <div class="cv-rname">COMPRESSOR BLADES</div>
+                    <div class="cv-finding ok">No FOD damage detected</div>
+                    <div class="cv-finding ok">Blade profile within tolerance</div>
+                    <div class="cv-finding ok">No leading-edge erosion</div>
+                    <div class="conf-bar"><div class="conf-fill high" style="width:96%"></div></div>
+                    <div class="conf-label">CONFIDENCE 96%</div>
+                  </div>
+                </div>
+                <div class="cv-actions">
+                  <button class="act-btn primary" onclick="nav('report')">Generate MX Report</button>
+                  <button class="act-btn" onclick="nav('fdr')">Cross-ref FDR Data</button>
+                  <button class="act-btn" onclick="addAIMsg('CV scan complete. 3 findings flagged on ENG-1: combustor stage 3 thermal bloom (87% confidence), fuel nozzle asymmetry on positions 7–9 (91%), and minor HPT tip erosion (74%). Recommend priority borescope follow-up on combustor liner and nozzle 8 cleaning.'); nav('dashboard')">Send to AI Chat</button>
+                  <button class="act-btn" onclick="rescanCV()">Re-scan</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">LIVE SENSOR FEED</span><span class="card-badge b-ok">3 CAMERAS ACTIVE</span></div>
+            <div class="card-body">
+              <div class="cam-grid">
+                <div class="cam-card">
+                  <div class="cam-label">CAM-1 · INLET</div>
+                  <div class="cam-preview">THERMAL IR</div>
+                  <span class="badge b-ok">CLEAR</span>
+                </div>
+                <div class="cam-card">
+                  <div class="cam-label">CAM-2 · COMBUSTOR</div>
+                  <div class="cam-preview hot-cam">OPTICAL + IR</div>
+                  <span class="badge b-er">ANOMALY</span>
+                </div>
+                <div class="cam-card">
+                  <div class="cam-label">CAM-3 · EXHAUST</div>
+                  <div class="cam-preview">VISUAL</div>
+                  <span class="badge b-wn">REVIEW</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- FDR SYNC PANEL -->
+        <section id="p-fdr" class="panel">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">FLIGHT DATA RECORDER SYNC</span>
+              <span class="card-badge b-ok">LAST SYNC 2 MIN AGO</span>
+            </div>
+            <div class="card-body">
+              <div class="fdr-grid">
+                <div class="fdr-stat"><div class="fdr-val accent">847</div><div class="fdr-lbl">PARAMETERS</div></div>
+                <div class="fdr-stat"><div class="fdr-val ok">3</div><div class="fdr-lbl">SORTIES LOADED</div></div>
+                <div class="fdr-stat"><div class="fdr-val wn">7</div><div class="fdr-lbl">DEVIATIONS</div></div>
+              </div>
+
+              <div class="prog-wrap">
+                <div class="sb-title" style="margin-bottom:10px">PARAMETER ANALYSIS PROGRESS</div>
+                <div class="prog-row"><div class="prog-label">ENGINE TEMPS</div><div class="prog-bar"><div class="prog-fill ok-fill" style="width:100%"></div></div><div class="prog-val">100%</div></div>
+                <div class="prog-row"><div class="prog-label">FUEL SYSTEM</div><div class="prog-bar"><div class="prog-fill ok-fill" style="width:100%"></div></div><div class="prog-val">100%</div></div>
+                <div class="prog-row"><div class="prog-label">VIBRATION</div><div class="prog-bar"><div class="prog-fill ok-fill" style="width:100%"></div></div><div class="prog-val">100%</div></div>
+                <div class="prog-row"><div class="prog-label">PRESSURES</div><div class="prog-bar"><div class="prog-fill ok-fill" style="width:88%"></div></div><div class="prog-val">88%</div></div>
+                <div class="prog-row"><div class="prog-label">FLIGHT REGIME</div><div class="prog-bar"><div class="prog-fill wn-fill" style="width:72%"></div></div><div class="prog-val">72%</div></div>
+              </div>
+
+              <table class="fdr-table">
+                <thead>
+                  <tr><th>PARAMETER</th><th>RECORDED</th><th>BASELINE</th><th>DEVIATION</th><th>FLIGHT</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>EGT Max</td><td>847°C</td><td>791°C</td><td class="dev-pos">+56°C</td><td>TF-2246</td></tr>
+                  <tr><td>Fuel Flow Peak</td><td>2441 kg/h</td><td>2180 kg/h</td><td class="dev-pos">+12.0%</td><td>TF-2246</td></tr>
+                  <tr><td>N1 Vib 1/Rev</td><td>0.43 IPS</td><td>0.28 IPS</td><td class="dev-wn">+0.15</td><td>TF-2245</td></tr>
+                  <tr><td>EGTM Margin</td><td>28°C</td><td>84°C</td><td class="dev-pos">-56°C</td><td>TF-2246</td></tr>
+                  <tr><td>N2 RPM</td><td>99.1%</td><td>99.0%</td><td class="dev-ok">+0.1%</td><td>TF-2246</td></tr>
+                  <tr><td>Oil Temp</td><td>118°C</td><td>121°C</td><td class="dev-ok">-3°C</td><td>TF-2246</td></tr>
+                </tbody>
+              </table>
+
+              <div class="cv-actions" style="margin-top:14px">
+                <button class="act-btn primary" id="sync-btn" onclick="doSync()">Re-sync FDR Data</button>
+                <button class="act-btn" onclick="nav('report')">Generate Report from FDR</button>
+                <button class="act-btn" onclick="addAIMsg('FDR analysis complete across 3 sorties. Critical findings: EGT margin eroded from 84°C to 28°C, fuel flow elevated 12% above model, N1 vibration trending up. Trend indicates progressive deterioration consistent with combustor liner degradation.'); nav('dashboard')">Send to AI Chat</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">TEST FLIGHT COMPARISON · TF-2244 vs TF-2246</span></div>
+            <div class="card-body">
+              <div class="prog-wrap">
+                <div class="prog-row"><div class="prog-label">EGT Margin</div><div class="prog-bar"><div class="prog-fill er-fill" style="width:33%"></div></div><div class="prog-val er-val">-67%</div></div>
+                <div class="prog-row"><div class="prog-label">Fuel Efficiency</div><div class="prog-bar"><div class="prog-fill wn-fill" style="width:88%"></div></div><div class="prog-val wn-val">-12%</div></div>
+                <div class="prog-row"><div class="prog-label">Vibration Spec</div><div class="prog-bar"><div class="prog-fill wn-fill" style="width:54%"></div></div><div class="prog-val wn-val">-46%</div></div>
+                <div class="prog-row"><div class="prog-label">N1/N2 Health</div><div class="prog-bar"><div class="prog-fill ok-fill" style="width:99%"></div></div><div class="prog-val ok-val">OK</div></div>
+                <div class="prog-row"><div class="prog-label">Oil System</div><div class="prog-bar"><div class="prog-fill ok-fill" style="width:97%"></div></div><div class="prog-val ok-val">OK</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PILOT FEEDBACK PANEL -->
+        <section id="p-pilot" class="panel">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">PILOT FEEDBACK INTAKE</span>
+              <span class="card-badge b-wn">2 UNREVIEWED REPORTS</span>
+            </div>
+            <div class="card-body">
+              <form class="pilot-form" onsubmit="submitFeedback(event)">
+                <div class="pf-row">
+                  <div class="pf-col">
+                    <label class="pf-label">PILOT NAME / ID</label>
+                    <input class="pf-input" id="pf-pilot" placeholder="Capt. J. Martinez / ID-4471" />
+                  </div>
+                  <div class="pf-col">
+                    <label class="pf-label">FLIGHT NUMBER</label>
+                    <input class="pf-input" id="pf-flight" placeholder="N7742 / TF-2247" />
+                  </div>
+                  <div class="pf-col">
+                    <label class="pf-label">ENGINE</label>
+                    <select class="pf-input" id="pf-eng">
+                      <option>ENG-1 LEFT</option>
+                      <option>ENG-2 RIGHT</option>
+                      <option>APU</option>
+                      <option>MULTIPLE</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="pf-row">
+                  <div class="pf-col">
+                    <label class="pf-label">PHASE OF FLIGHT</label>
+                    <select class="pf-input" id="pf-phase">
+                      <option>Taxi</option><option>Takeoff</option><option>Climb</option>
+                      <option selected>Cruise</option><option>Descent</option>
+                      <option>Landing</option><option>Shutdown</option>
+                    </select>
+                  </div>
+                  <div class="pf-col">
+                    <label class="pf-label">SEVERITY</label>
+                    <select class="pf-input" id="pf-sev">
+                      <option>Low — informational</option>
+                      <option selected>Medium — monitor</option>
+                      <option>High — investigate</option>
+                      <option>Critical — grounded</option>
+                    </select>
+                  </div>
+                  <div class="pf-col">
+                    <label class="pf-label">ALTITUDE AT EVENT</label>
+                    <input class="pf-input" id="pf-alt" placeholder="FL350" />
+                  </div>
+                </div>
+                <div>
+                  <div class="pf-label" style="margin-bottom:5px">OBSERVED SYMPTOMS</div>
+                  <div class="pf-checklist">
+                    <label class="pf-check"><input type="checkbox"> Unusual vibration</label>
+                    <label class="pf-check"><input type="checkbox"> Abnormal noise / surge</label>
+                    <label class="pf-check"><input type="checkbox"> EGT spike</label>
+                    <label class="pf-check"><input type="checkbox"> Fuel flow deviation</label>
+                    <label class="pf-check"><input type="checkbox"> Thrust asymmetry</label>
+                    <label class="pf-check"><input type="checkbox"> FADEC warning light</label>
+                    <label class="pf-check"><input type="checkbox"> Oil pressure / temp flag</label>
+                    <label class="pf-check"><input type="checkbox"> Engine stall / flameout</label>
+                  </div>
+                </div>
+                <div>
+                  <label class="pf-label" style="margin-bottom:5px">DETAILED DESCRIPTION</label>
+                  <textarea class="pf-input" id="pf-desc" placeholder="Describe the event, onset conditions, duration, and any corrective actions taken..."></textarea>
+                </div>
+                <div class="submit-row">
+                  <button type="button" class="act-btn" onclick="clearForm()">Clear</button>
+                  <button type="submit" class="act-btn primary">Submit Report</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span class="card-title">RECENT PILOT REPORTS</span></div>
+            <div class="card-body">
+              <div class="pilot-entries" id="pilot-entries">
+                <div class="pe crit-pe">
+                  <div class="pe-head"><span class="pe-pilot">Capt. R. Torres</span><span class="pe-time">TF-2246 · 14:15 UTC</span></div>
+                  <div class="pe-text">Intermittent vibration onset at 88% N1 during cruise FL350. Lasted approx 40 seconds, self-resolved. EGT briefly peaked above normal. No FADEC warning.</div>
+                  <div class="pe-tags">
+                    <span class="pe-tag">ENG-1</span><span class="pe-tag">VIBRATION</span><span class="pe-tag">EGT SPIKE</span>
+                    <span class="badge b-wn">MEDIUM</span>
+                  </div>
+                </div>
+                <div class="pe crit-pe">
+                  <div class="pe-head"><span class="pe-pilot">F/O K. Patel</span><span class="pe-time">TF-2245 · 11:42 UTC</span></div>
+                  <div class="pe-text">Slight roughness noted during climb through FL240 on ENG-1. Thrust briefly reduced to 88% and symptom abated. No aural warning. Recommend borescope.</div>
+                  <div class="pe-tags">
+                    <span class="pe-tag">ENG-1</span><span class="pe-tag">ROUGHNESS</span><span class="pe-tag">CLIMB</span>
+                    <span class="badge b-wn">MEDIUM</span>
+                  </div>
+                </div>
+                <div class="pe ok-pe">
+                  <div class="pe-head"><span class="pe-pilot">Capt. M. Osei</span><span class="pe-time">TF-2244 · 09:30 UTC</span></div>
+                  <div class="pe-text">All systems normal throughout sortie. ENG-1 and ENG-2 responded normally across all thrust settings. No anomalies noted.</div>
+                  <div class="pe-tags"><span class="pe-tag">ENG-1</span><span class="pe-tag">ENG-2</span><span class="badge b-ok">NOMINAL</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MX REPORT PANEL -->
+        <section id="p-report" class="panel">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">MAINTENANCE RECOMMENDATION REPORT</span>
+              <span class="card-badge b-er">GROUNDING RECOMMENDED</span>
+            </div>
+            <div class="card-body">
+              <div class="report-meta">
+                <div class="rm"><div class="rm-l">AIRCRAFT</div><div class="rm-v">B737-800 · N7742</div></div>
+                <div class="rm"><div class="rm-l">ENGINE</div><div class="rm-v">ENG-1 · SN 741002</div></div>
+                <div class="rm"><div class="rm-l">GENERATED</div><div class="rm-v" id="rep-time">--:-- UTC</div></div>
+                <div class="rm"><div class="rm-l">CONFIDENCE</div><div class="rm-v ok">87%</div></div>
+              </div>
+
+              <div class="report-section">
+                <div class="rs-title">RISK ASSESSMENT</div>
+                <div class="risk-row"><div class="risk-label">Combustor liner</div><div class="risk-bar"><div class="risk-fill" style="width:82%;background:#ff4f4f"></div></div><div class="risk-pct er-val">82%</div></div>
+                <div class="risk-row"><div class="risk-label">Fuel nozzle health</div><div class="risk-bar"><div class="risk-fill" style="width:64%;background:#ffb400"></div></div><div class="risk-pct wn-val">64%</div></div>
+                <div class="risk-row"><div class="risk-label">HPT blade condition</div><div class="risk-bar"><div class="risk-fill" style="width:44%;background:#ffb400"></div></div><div class="risk-pct wn-val">44%</div></div>
+                <div class="risk-row"><div class="risk-label">Compressor health</div><div class="risk-bar"><div class="risk-fill" style="width:12%;background:#39ff9a"></div></div><div class="risk-pct ok-val">12%</div></div>
+                <div class="risk-row"><div class="risk-label">Oil / lubrication</div><div class="risk-bar"><div class="risk-fill" style="width:8%;background:#39ff9a"></div></div><div class="risk-pct ok-val">8%</div></div>
+              </div>
+
+              <div class="report-section">
+                <div class="rs-title">REQUIRED ACTIONS — PRIORITY ORDER</div>
+                <div class="rs-item"><div class="rs-num">01</div><div class="rs-text">Immediate borescope inspection of combustor stage 3 liner.<div class="rs-sub">Source: CV analysis (87% conf) + EGT deviation +56°C over 3 sorties</div></div></div>
+                <div class="rs-item"><div class="rs-num">02</div><div class="rs-text">Fuel nozzle flow-check on positions 7, 8, and 9 — nozzle 8 shows coking residue.<div class="rs-sub">Source: CV analysis (91% conf) + FDR fuel flow +12% deviation</div></div></div>
+                <div class="rs-item"><div class="rs-num">03</div><div class="rs-text">HPT blade row 1 tip clearance check — minor erosion on 3 blades detected.<div class="rs-sub">Source: CV analysis (74% conf)</div></div></div>
+                <div class="rs-item"><div class="rs-num">04</div><div class="rs-text">Review pilot reports TF-2245 and TF-2246 — vibration onset at cruise correlates with combustor and nozzle findings.<div class="rs-sub">Source: Pilot feedback · Capt. Torres + F/O Patel</div></div></div>
+                <div class="rs-item"><div class="rs-num">05</div><div class="rs-text">Following borescope: assess EGT margin restoration — current 28°C margin is critically low.<div class="rs-sub">Source: FDR — TF-2244 to TF-2246 trend</div></div></div>
+              </div>
+
+              <div class="report-section">
+                <div class="rs-title">DATA SOURCES</div>
+                <div class="src-provenance">
+                  <div class="sp-card"><span class="ss live">● CV ANALYSIS</span><br>4 regions · 3 findings</div>
+                  <div class="sp-card"><span class="ss live">● FDR DATA</span><br>847 params · 7 deviations</div>
+                  <div class="sp-card"><span class="ss live">● PILOT REPORTS</span><br>3 reports · 2 flagged</div>
+                  <div class="sp-card"><span class="ss live">● TEST FLIGHT DB</span><br>Baseline TF-2244 delta</div>
+                </div>
+              </div>
+
+              <div class="cv-actions">
+                <button class="act-btn primary" onclick="addAIMsg('MX Report generated. 5 action items issued. Overall ENG-1 risk: HIGH. Grounding recommended pending borescope and nozzle flow-check. EGT margin critically low at 28°C.'); nav('dashboard')">Send to AI Chat</button>
+                <button class="act-btn" onclick="exportReport()">Export PDF</button>
+                <button class="act-btn" onclick="genReport()">Regenerate</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="src/app.js"></script>
+</body>
+</html>
